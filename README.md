@@ -11,6 +11,7 @@ So intead of using [2.120-Starter](https://drive.google.com/drive/folders/1VxoxG
 2. Install Visual Studio 2022 and its necessary components following [the official guide](https://learn.microsoft.com/en-us/windows/mixed-reality/develop/install-the-tools). Make sure you install all the components for hololens2. 
 3. Pull this repo with `git clone git@github.com:Yuxiang-Ma/2.12-Hololens2.git`. 
 4. Launch Unity Hub, import the project (“Open -> Add project from disk”), and launch Unity. 
+5. Open the scence. Go to "File"->"Open Scence", select the folder Scences/ and then select MainScene.unity. 
 
 ## Building and deploying 
 Then you can build and deloy the project following the "Building and deploying" part of the [instructions](https://docs.google.com/document/d/17jsBMaB0MUb40jxV13PPMbnD3ZUolpd2wvhG_WX-qII/edit). 
