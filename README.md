@@ -14,4 +14,5 @@ So intead of using [2.120-Starter](https://drive.google.com/drive/folders/1VxoxG
 
 ## Building and deploying 
 Then you can build and deloy the project following the "Building and deploying" part of the [instructions](https://docs.google.com/document/d/17jsBMaB0MUb40jxV13PPMbnD3ZUolpd2wvhG_WX-qII/edit). 
+
 When making the build, it is recommended by unity to specify an output directory for the build. (It is said that you might mess up the project by putting other folders in the unity project, including the build). The build takes a while, please be patient. 
