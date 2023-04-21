@@ -41,4 +41,5 @@ while True:
         ax = plt.gca()
         ax.xaxis.set_major_formatter(XFMT)
         plt.autoscale()
-        plt.savefig(SAVE_PATHS[data], dpi=DPI)        
+        plt.savefig(SAVE_PATHS[data], dpi=DPI)      
+    plt.close('all')
