@@ -1,9 +1,10 @@
-from typing import Dict
+import os
 import socket  # Import the socket library for network communication
 import time  # Import the time library for time-related functions
 import random  # Import the random library for generating random numbers and choices
 import struct  # Import the struct library for working with packed binary data
 import datetime
+from typing import Dict
 
 # Replace the following with the IP address of the machine running the server
 SERVER_IP = "10.29.122.25"  # Define the server IP address (localhost in this case)
@@ -12,6 +13,7 @@ SERVER_PORT = 21200  # Define the server port number
 # Path to save data
 SAVE_PATH = "../../data"
 
+
 def write_data(data_dict: Dict[str, float], verbose=True):
     now_utc_stamp = datetime.datetime.now(tz=datetime.timezone.utc).timestamp()
 
@@ -19,7 +21,7 @@ def write_data(data_dict: Dict[str, float], verbose=True):
         if verbose:
             print(f"Received {key}:", key)
 
-        with open(f'./ur5_{key}.csv', 'a') as f:
+        with open(os.path.join(SAVE_PATH, f'ur5_{key}.csv'), 'a') as f:
             f.write(f'{now_utc_stamp}, {value}\n')
 
 
