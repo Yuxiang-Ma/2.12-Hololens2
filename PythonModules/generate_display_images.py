@@ -1,8 +1,8 @@
 
 import datetime
 from time import sleep
-import pytz
 
+import pytz
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.dates as md
@@ -31,8 +31,8 @@ while True:
         values = v[read_idx]
         
         # Convert UTC timestamp to EST
-        dates=[datetime.datetime.fromtimestamp(ts) for ts in timestamps]
-        datenums=md.date2num(dates)
+        dates = [datetime.datetime.fromtimestamp(ts) for ts in timestamps]
+        datenums = md.date2num(dates)
         
         # Save images
         plt.figure(figsize=(IMG_SIZE[0]/DPI, IMG_SIZE[1]/DPI))
