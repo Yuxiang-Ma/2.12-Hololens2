@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Linq;
+using Microsoft.MixedReality.Toolkit.UI;
 
 /**
  * This module is an example of how to communicate with the UR5 robot via a relay.
@@ -23,15 +24,22 @@ public class RobotController : MonoBehaviour
     public int TimeoutMs = 2000;
     public TextMeshPro TextMesh;
 
+    // slider control for chest compression
+    public int Amp = 50;      // mm
+    public int Freq =  110;      // freq
+
+    public TouchSliderValue AmplitudeSlider;
+    public TouchSliderValue FrequencySlider;
     // We do all the networking in a dedicated thread / task.
     // The networking thread writes the received data while the main thread reads them.
-    // We need a lock to prevent data races.
+    // We need a lock to prevent data races
     private object _lock = new();
 
     private State _state;
 
     private bool _stateChanged;
 
+    private bool _sliderChanged;
 
     private bool _connected;
 
@@ -50,6 +58,7 @@ public class RobotController : MonoBehaviour
         _jointTorques = new float[6];
         _state = State.ArmUp;
         _stateChanged = false;
+        _sliderChanged = false;
         Task.Run(ConnectionLoop);
     }
 
@@ -72,7 +81,8 @@ public class RobotController : MonoBehaviour
         var status = _connected ? "Connected" : "Disconnected";
         text += $"Server IP: {serverIp} ({status})\n";
         text += "Torques: " + string.Join(", ", _jointTorques.Select(torque => $"{torque:00.00}")) + "\n";
-        text += "Arm currently " + (_state == State.ArmUp ? "UP" : "DOWN");
+        text += "Arm currently " + (_state == State.ArmUp ? "UP" : "DOWN"+"\n");
+        text += $"CPR amplitude {Amp:N}mm, frequency {Freq:N} cpm";
         TextMesh.text = text;
     }
 
@@ -109,6 +119,14 @@ public class RobotController : MonoBehaviour
                     }
                     socket.Send(Encoding.UTF8.GetBytes(message));
 
+                    if (_sliderChanged)
+                    {
+                        message = "Slider value changed\n";
+                        message += $"Amp:{Amp:N}\n";
+                        message += $"Freq:{Freq:N}\n";
+                        _sliderChanged = false;
+                    }
+                    socket.Send(Encoding.UTF8.GetBytes(message));
                     var count = socket.Receive(buffer);
                     // The server replies with 24 bytes, representing 6 floats in network 
                     // byte order (big endian).
@@ -155,6 +173,22 @@ public class RobotController : MonoBehaviour
         }
     }
 
+    public void OnSliderAmpUpdated(SliderEventData eventData)
+    {
+        Amp = (int)(AmplitudeSlider.start + eventData.NewValue*AmplitudeSlider.range);
+        lock (_lock)
+        {
+            _sliderChanged = true;
+        }
+    }
+    public void OnSliderFreqUpdated(SliderEventData eventData)
+    {
+        Freq = (int) (FrequencySlider.start + eventData.NewValue * FrequencySlider.range);
+        lock (_lock)
+        {
+            _sliderChanged = true;
+        }
+    }
     private enum State
     {
         ArmUp,
