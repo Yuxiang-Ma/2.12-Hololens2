@@ -9,14 +9,7 @@ DATA_PATHS = {
     "torque5": "../data/ur5_torque5.csv",
 }
 
-SAVE_PATHS = {
-    "torque0": "../img/ur5_torque0.png",
-    "torque1": "../img/ur5_torque1.png",
-    "torque2": "../img/ur5_torque2.png",
-    "torque3": "../img/ur5_torque3.png",
-    "torque4": "../img/ur5_torque4.png",
-    "torque5": "../img/ur5_torque5.png",
-}
+SAVE_PATH = "../img/display_image.png"
 
 # Read
 READ_FREQ = 0.5  # seconds
