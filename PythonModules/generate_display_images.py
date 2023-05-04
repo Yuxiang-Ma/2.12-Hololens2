@@ -5,7 +5,8 @@ from time import sleep
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from config import DATA_PATHS, SAVE_PATH, IMG_SIZE, DISPLAY_PERIOD, READ_FREQ
+from config import DATA_PATHS, SAVE_PATHS, IMG_SIZE, DISPLAY_PERIOD, READ_FREQ, UR_IP
+from ur5io import connect_read
 
 DPI = 100
 N_ROWS = 3
