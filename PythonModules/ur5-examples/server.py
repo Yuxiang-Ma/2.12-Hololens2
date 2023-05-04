@@ -1,3 +1,14 @@
+'''
+Descripttion: KirchhoffRod : A C++ FD code simulating KirchhoffRod
+version: 0.0.1
+Author: Yuxiang Ma
+Affiliate: Mechanical Engineering, Massachusetts Institute of Technology
+Group: Perceptual Science Group
+Date: 2023-04-27 13:50:08
+LastEditors: Yuxiang Ma
+LastEditTime: 2023-05-04 11:23:11
+Website: http://persci.mit.edu/
+'''
 import asyncio
 import concurrent.futures
 import struct
@@ -23,7 +34,7 @@ async def comm_hololens():
         print("Connected to HoloLens")
         while True:
             try:
-                await reader.read(1024)
+                data = await reader.read(1024)
                 writer.write(struct.pack("!" + "f" * 6, *torques))
                 await writer.drain()
             except:

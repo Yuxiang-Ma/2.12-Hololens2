@@ -32,7 +32,7 @@ public class RobotController : MonoBehaviour
     public TouchSliderValue FrequencySlider;
     // We do all the networking in a dedicated thread / task.
     // The networking thread writes the received data while the main thread reads them.
-    // We need a lock to prevent data races
+    // We need a lock to prevent data 
     private object _lock = new();
 
     private State _state;
@@ -114,6 +114,7 @@ public class RobotController : MonoBehaviour
                     var message = " ";
                     if (_stateChanged)
                     {
+                        message = "Arm state changed\n";
                         message = _state == State.ArmUp ? "UP" : "DOWN";
                         _stateChanged = false;
                     }
