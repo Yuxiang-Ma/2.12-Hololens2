@@ -15,6 +15,7 @@ def connect_receive(UR_IP):
     print("Connected to UR5")
     setattr(rtde_r, 'get_force', lambda: rtde_r.getActualTCPForce())
     setattr(rtde_r, 'get_displacement', lambda: rtde_r.getActualTCPPose())
+    return rtde_r
 connect_read = connect_receive
 
 # OLD CODE below, replaced with setattr statements above
