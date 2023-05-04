@@ -25,8 +25,8 @@ public class RobotController : MonoBehaviour
     public TextMeshPro TextMesh;
 
     // slider control for chest compression
-    public int Amp = 50;      // mm
-    public int Freq =  110;      // freq
+    public float Amp = 60;      // mm
+    public float Freq =  110;      // freq
 
     public TouchSliderValue AmplitudeSlider;
     public TouchSliderValue FrequencySlider;
@@ -176,7 +176,7 @@ public class RobotController : MonoBehaviour
 
     public void OnSliderAmpUpdated(SliderEventData eventData)
     {
-        Amp = (int)(AmplitudeSlider.start + eventData.NewValue*AmplitudeSlider.range);
+        Amp = eventData.NewValue*40+30;
         lock (_lock)
         {
             _sliderChanged = true;
@@ -184,8 +184,8 @@ public class RobotController : MonoBehaviour
     }
     public void OnSliderFreqUpdated(SliderEventData eventData)
     {
-        Freq = (int) (FrequencySlider.start + eventData.NewValue * FrequencySlider.range);
-        lock (_lock)
+        Freq = eventData.NewValue*40+90;
+     lock (_lock)
         {
             _sliderChanged = true;
         }

@@ -23,9 +23,8 @@ public class TouchSliderValue : MonoBehaviour
 
         if (textMesh != null)
         {
-            textMesh.text = $"{start + range * eventData.NewValue:N}"+unit;
+            textMesh.text = $"{start + range * eventData.NewValue:F0}"+unit;
         }
     }
-    // public void SliderDataTransmitter(SliderEventData eventData)
-    // { }
+
 }
