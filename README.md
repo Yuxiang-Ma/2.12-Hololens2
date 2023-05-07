@@ -67,6 +67,13 @@ python mock_client.py
 
 ## Project Structure
 
-
+## UI definition
+### Buttons
+| Button number     | Funtionality |
+| ----------- | ----------- |
+| 1           | Change IP of UR5       |
+| 2           | Mobile Robot Overide       |
+| 3           | Change IP of Mobile Robot |
+| 4           | UR5 initialization and start/stop override|
 
 
