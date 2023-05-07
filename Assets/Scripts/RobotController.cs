@@ -43,6 +43,7 @@ public class RobotController : MonoBehaviour
 
     private bool _connected;
 
+    private int _UR5Initiated;
     // These fields may help changing the relay IP through a virtual keyboard while 
     // the app is running, but it has not been thoroughly tested xD.
     private bool _ipChanged;
@@ -59,6 +60,7 @@ public class RobotController : MonoBehaviour
         _state = State.Stop;
         _stateChanged = false;
         _sliderChanged = false;
+        _UR5Initiated = -1;
         Task.Run(ConnectionLoop);
     }
 
@@ -81,8 +83,12 @@ public class RobotController : MonoBehaviour
         var status = _connected ? "Connected" : "Disconnected";
         text += $"Server IP: {serverIp} ({status})\n";
         text += "Torques: " + string.Join(", ", _jointTorques.Select(torque => $"{torque:00.00}")) + "\n";
-        text += "Arm currently " + (_state == State.Start ? "START" : "STOP"+"\n");
-        text += $"CPR amplitude {Amp:N}mm, frequency {Freq:N} cpm";
+        text += "UR5 currently " + (_state == State.Start ? "START\n" : "STOP\n");
+        if (_UR5Initiated != -1)
+        {
+            text += "UR5 initiated";
+        }
+        //text += $"CPR amplitude {Amp:N}mm, frequency {Freq:N} cpm";
         TextMesh.text = text;
     }
 
@@ -111,10 +117,17 @@ public class RobotController : MonoBehaviour
                         break;
                     }
 
-                    var message = " ";
+                    var message = "";
+                    if (_UR5Initiated == 0)
+                    {
+                        message = "Initiate UR5\n";
+                        _UR5Initiated = 1;
+                        print(message);
+                    }
+
                     if (_stateChanged)
                     {
-                        message = "Arm state changed\n";
+                        message = "UR5 state changed\n";
                         message = _state == State.Start ? "START" : "STOP";
                         _stateChanged = false;
                         print(message);
@@ -170,6 +183,12 @@ public class RobotController : MonoBehaviour
 
     public void OnUR5ButtonClicked()
     {
+        if (_UR5Initiated == -1)
+        {
+            _UR5Initiated = 0;  // initiating UR5
+            return;
+        }
+
         _state = _state == State.Start ? State.Stop : State.Start;
         lock (_lock)
         {
