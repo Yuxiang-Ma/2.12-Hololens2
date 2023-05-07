@@ -9,20 +9,51 @@ public class WebStream : MonoBehaviour
 {
     public MeshRenderer frame;    //Mesh for displaying video
 
-    public string sourceURL = "http://10.0.0.128:8080/video";
+    public string sourceURL = "http://10.189.3.42:3000";
     private Texture2D texture;
     private Stream stream;
     public TextMeshPro textMesh = null;
+
+    private TouchScreenKeyboard _urlKeyboard;
 
     void Start()
     {
         if (textMesh == null)
         {
             textMesh = GetComponent<TextMeshPro>();
-            textMesh.text = $"stream is startting";
+            textMesh.text = $"stream is starting";
         }
 
         texture = new Texture2D(2, 2);
+        StartStream();
+    }
+
+    void Update()
+    {
+        if (_urlKeyboard?.status == TouchScreenKeyboard.Status.Done
+            || _urlKeyboard?.status == TouchScreenKeyboard.Status.Canceled)
+        {
+            if (sourceURL != _urlKeyboard.text)
+            {
+                sourceURL = _urlKeyboard.text;
+                StartStream();
+            }
+            _urlKeyboard = null;
+        }
+    }
+
+    public void OnEditSourceUrlButtonClicked()
+    {
+        _urlKeyboard = TouchScreenKeyboard.Open(sourceURL, TouchScreenKeyboardType.URL, false, false, false);
+    }
+
+    private void StartStream()
+    {
+        if (stream != null)
+        {
+            stream.Close();
+        }
+
         // create HTTP request
         
         HttpWebRequest req = (HttpWebRequest)WebRequest.Create(sourceURL);
@@ -70,6 +101,7 @@ public class WebStream : MonoBehaviour
             stream.ReadByte(); // LF after bytes
         }
     }
+
 
     int FindLength(Stream stream)
     {
