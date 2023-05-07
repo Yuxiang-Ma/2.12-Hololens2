@@ -24,6 +24,7 @@ public class WebStream : MonoBehaviour
 
         texture = new Texture2D(2, 2);
         // create HTTP request
+        
         HttpWebRequest req = (HttpWebRequest)WebRequest.Create(sourceURL);
         //Optional (if authorization is Digest)
         req.Credentials = new NetworkCredential("username", "password");
@@ -36,7 +37,7 @@ public class WebStream : MonoBehaviour
 
     IEnumerator GetFrame()
     {
-        Byte[] JpegData = new Byte[1000000];
+        Byte[] JpegData = new Byte[640*480];
 
         while (true)
         {

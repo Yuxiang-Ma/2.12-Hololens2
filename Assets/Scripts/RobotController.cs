@@ -56,7 +56,7 @@ public class RobotController : MonoBehaviour
         _connected = false;
         _ipChanged = false;
         _jointTorques = new float[6];
-        _state = State.ArmUp;
+        _state = State.Stop;
         _stateChanged = false;
         _sliderChanged = false;
         Task.Run(ConnectionLoop);
@@ -81,7 +81,7 @@ public class RobotController : MonoBehaviour
         var status = _connected ? "Connected" : "Disconnected";
         text += $"Server IP: {serverIp} ({status})\n";
         text += "Torques: " + string.Join(", ", _jointTorques.Select(torque => $"{torque:00.00}")) + "\n";
-        text += "Arm currently " + (_state == State.ArmUp ? "UP" : "DOWN"+"\n");
+        text += "Arm currently " + (_state == State.Start ? "START" : "STOP"+"\n");
         text += $"CPR amplitude {Amp:N}mm, frequency {Freq:N} cpm";
         TextMesh.text = text;
     }
@@ -115,8 +115,9 @@ public class RobotController : MonoBehaviour
                     if (_stateChanged)
                     {
                         message = "Arm state changed\n";
-                        message = _state == State.ArmUp ? "UP" : "DOWN";
+                        message = _state == State.Start ? "START" : "STOP";
                         _stateChanged = false;
+                        print(message);
                     }
                     socket.Send(Encoding.UTF8.GetBytes(message));
 
@@ -126,7 +127,9 @@ public class RobotController : MonoBehaviour
                         message += $"Amp:{Amp:N}\n";
                         message += $"Freq:{Freq:N}\n";
                         _sliderChanged = false;
+                        print(message);
                     }
+
                     socket.Send(Encoding.UTF8.GetBytes(message));
                     var count = socket.Receive(buffer);
                     // The server replies with 24 bytes, representing 6 floats in network 
@@ -165,9 +168,9 @@ public class RobotController : MonoBehaviour
             TouchScreenKeyboardType.DecimalPad, false, false, false);
     }
 
-    public void OnActionButtonClicked()
+    public void OnUR5ButtonClicked()
     {
-        _state = _state == State.ArmUp ? State.ArmDown : State.ArmUp;
+        _state = _state == State.Start ? State.Stop : State.Start;
         lock (_lock)
         {
             _stateChanged = true;
@@ -190,9 +193,14 @@ public class RobotController : MonoBehaviour
             _sliderChanged = true;
         }
     }
+    //private enum State
+    //{
+    //    ArmUp,
+    //    ArmDown,
+    //}
     private enum State
     {
-        ArmUp,
-        ArmDown,
+        Start,
+        Stop,
     }
 }
