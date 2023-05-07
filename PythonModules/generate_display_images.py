@@ -12,7 +12,8 @@ DPI = 100
 N_ROWS = 3
 PAUSE_TIME = 0.1
 
-ROBOT_ACTIVE = True
+# Set to True to connect to the robot
+ROBOT_ACTIVE = False
 
 def update_data(rtde_r, start, ts, forces, displacements, test=False):
     """Update data lists with current data from the UR5 robot.
@@ -32,7 +33,7 @@ def update_data(rtde_r, start, ts, forces, displacements, test=False):
         forces.append(get_force(rtde_r))
         displacements.append(get_displacement(rtde_r))
 
-def plot_data(fig, axs, ts, forces, displacements, ROI=DISPLAY_PERIOD/READ_FREQ, save=False):
+def plot_data(fig, axs, ts, forces, displacements, ROI=int(DISPLAY_PERIOD/READ_FREQ), save=False):
     """Update plot with current data from the UR5 robot.
         args:    fig (Figure): figure object
                  axs (Axes): axes object
@@ -74,12 +75,15 @@ def main(test=False):
     # Initialize plot
     plt.ion() # interactive mode (maintain single figure)
     fig, axs = plt.subplots(N_ROWS, 1, figsize=(IMG_SIZE[0]/DPI, IMG_SIZE[1]/DPI))
-
+    fig_num = fig.number
     # Main loop
     while True:
         sleep(READ_FREQ)
         update_data(rtde_r, start, ts, forces, displacements, test=test)
         plot_data(fig, axs, ts, forces, displacements)
+        if fig_num not in plt.get_fignums():
+            break
+    if ROBOT_ACTIVE: rtde_r.disconnect()
 
 if __name__ == '__main__':
     main(test=True)
