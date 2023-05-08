@@ -178,7 +178,7 @@ public class RobotController : MonoBehaviour
     public void OnEditHostIpButtonClicked()
     {
         var keyboardInputManager = FindObjectOfType<KeyboardInputManager>();
-        keyboardInputManager.RequestKeyboardInput(KeyboardInputManager.InputMode.IPAddress, newInput =>
+        keyboardInputManager.RequestKeyboardInput(KeyboardInputManager.InputMode.ServerIPAddress, newInput =>
         {
             if (ServerIp != newInput)
             {

@@ -9,7 +9,15 @@ public class WebStream : MonoBehaviour
 {
     public MeshRenderer frame;    //Mesh for displaying video
 
-    public string sourceURL = "http://10.189.3.42:3000";
+    public static string IpURL = "10.29.17.61:3000";
+
+    public static string FormatURL(string inputURL) // adds http:// to beginning of URL for quicker changing of URL in HoloLens.
+    {
+        return $"http://{inputURL}";
+    }
+
+    public string sourceURL = FormatURL(IpURL);
+
     private Texture2D texture;
     private Stream stream;
     public TextMeshPro textMesh = null;
@@ -45,7 +53,7 @@ public class WebStream : MonoBehaviour
     public void OnEditSourceUrlButtonClicked()
     {
         var keyboardInputManager = FindObjectOfType<KeyboardInputManager>();
-        keyboardInputManager.RequestKeyboardInput(KeyboardInputManager.InputMode.URL, newUrl =>
+        keyboardInputManager.RequestKeyboardInput(KeyboardInputManager.InputMode.MobileRobotVideoIPAddress, newUrl =>
         {
             if (sourceURL != newUrl)
             {
