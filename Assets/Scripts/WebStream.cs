@@ -9,7 +9,15 @@ public class WebStream : MonoBehaviour
 {
     public MeshRenderer frame;    //Mesh for displaying video
 
-    public string sourceURL = "http://10.189.3.42:3000";
+    public static string IpURL = "10.29.17.61:3000";
+
+    public static string FormatURL(string inputURL) // adds http:// to beginning of URL for quicker changing of URL in HoloLens.
+    {
+        return $"http://{inputURL}";
+    }
+
+    public string sourceURL = FormatURL(IpURL);
+
     private Texture2D texture;
     private Stream stream;
     public TextMeshPro textMesh = null;
@@ -23,8 +31,8 @@ public class WebStream : MonoBehaviour
             textMesh = GetComponent<TextMeshPro>();
             textMesh.text = $"stream is starting";
         }
-
         texture = new Texture2D(2, 2);
+        Debug.Log($"test: {sourceURL}");
         StartStream();
     }
 
@@ -49,7 +57,7 @@ public class WebStream : MonoBehaviour
         {
             if (sourceURL != newUrl)
             {
-                sourceURL = newUrl;
+                sourceURL = FormatURL(newUrl);
                 StartStream();
             }
         });
@@ -79,14 +87,19 @@ public class WebStream : MonoBehaviour
     {
         Byte[] JpegData = new Byte[640*480];
 
+        Debug.Log("JpegData initialized...");
+
         while (true)
         {
             int bytesToRead = FindLength(stream);
             if (textMesh == null)
             {
                 textMesh = GetComponent<TextMeshPro>();
-                textMesh.text = $"stream is read {bytesToRead}";
+                var floatingText = $"stream is read {bytesToRead}\n";
+                floatingText += $"Video URL: {sourceURL}";
+                textMesh.text = floatingText;
             }
+            Debug.Log("TextMesh Updated...");
             print(bytesToRead);
             if (bytesToRead == -1)
             {
@@ -99,6 +112,7 @@ public class WebStream : MonoBehaviour
             while (leftToRead > 0)
             {
                 leftToRead -= stream.Read(JpegData, bytesToRead - leftToRead, leftToRead);
+                Debug.Log($"Data Left to Read: {leftToRead}");
                 yield return null;
             }
 
