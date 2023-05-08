@@ -53,7 +53,7 @@ public class WebStream : MonoBehaviour
     public void OnEditSourceUrlButtonClicked()
     {
         var keyboardInputManager = FindObjectOfType<KeyboardInputManager>();
-        keyboardInputManager.RequestKeyboardInput(KeyboardInputManager.InputMode.URL, newUrl =>
+        keyboardInputManager.RequestKeyboardInput(KeyboardInputManager.InputMode.MobileRobotVideoIPAddress, newUrl =>
         {
             if (sourceURL != newUrl)
             {

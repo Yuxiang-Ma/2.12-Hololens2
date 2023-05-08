@@ -5,8 +5,8 @@ public class KeyboardInputManager : MonoBehaviour
     public enum InputMode
     {
         None,
-        IPAddress,
-        URL
+        ServerIPAddress,
+        MobileRobotVideoIPAddress
     }
 
     private InputMode currentInputMode = InputMode.None;
@@ -19,10 +19,10 @@ public class KeyboardInputManager : MonoBehaviour
         currentCallback = callback;
         switch (mode)
         {
-            case InputMode.IPAddress:
+            case InputMode.ServerIPAddress:
                 keyboard = TouchScreenKeyboard.Open("", TouchScreenKeyboardType.DecimalPad, false, false, false);
                 break;
-            case InputMode.URL:
+            case InputMode.MobileRobotVideoIPAddress:
                 keyboard = TouchScreenKeyboard.Open("", TouchScreenKeyboardType.URL, false, false, false);
                 break;
         }
