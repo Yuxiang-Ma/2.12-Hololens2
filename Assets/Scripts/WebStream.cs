@@ -31,8 +31,8 @@ public class WebStream : MonoBehaviour
             textMesh = GetComponent<TextMeshPro>();
             textMesh.text = $"stream is starting";
         }
-
         texture = new Texture2D(2, 2);
+        Debug.Log($"test: {sourceURL}");
         StartStream();
     }
 
@@ -57,7 +57,7 @@ public class WebStream : MonoBehaviour
         {
             if (sourceURL != newUrl)
             {
-                sourceURL = newUrl;
+                sourceURL = FormatURL(newUrl);
                 StartStream();
             }
         });
@@ -87,14 +87,19 @@ public class WebStream : MonoBehaviour
     {
         Byte[] JpegData = new Byte[640*480];
 
+        Debug.Log("JpegData initialized...");
+
         while (true)
         {
             int bytesToRead = FindLength(stream);
             if (textMesh == null)
             {
                 textMesh = GetComponent<TextMeshPro>();
-                textMesh.text = $"stream is read {bytesToRead}";
+                var floatingText = $"stream is read {bytesToRead}\n";
+                floatingText += $"Video URL: {sourceURL}";
+                textMesh.text = floatingText;
             }
+            Debug.Log("TextMesh Updated...");
             print(bytesToRead);
             if (bytesToRead == -1)
             {
@@ -107,6 +112,7 @@ public class WebStream : MonoBehaviour
             while (leftToRead > 0)
             {
                 leftToRead -= stream.Read(JpegData, bytesToRead - leftToRead, leftToRead);
+                Debug.Log($"Data Left to Read: {leftToRead}");
                 yield return null;
             }
 
