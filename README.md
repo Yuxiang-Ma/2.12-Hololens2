@@ -67,7 +67,7 @@ python mock_client.py
 
 ## Project Structure
 
-## UI definition
+## GUI definition
 ### Buttons
 | Button number     | Funtionality |
 | ----------- | ----------- |
