@@ -88,6 +88,10 @@ public class RobotController : MonoBehaviour
         {
             text += "UR5 initiated";
         }
+        else
+        {
+            text += "UR5 not initiated";
+        }
         //text += $"CPR amplitude {Amp:N}mm, frequency {Freq:N} cpm";
         TextMesh.text = text;
     }
