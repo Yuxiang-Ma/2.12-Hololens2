@@ -28,24 +28,33 @@ public class WebStream : MonoBehaviour
         StartStream();
     }
 
-    void Update()
-    {
-        if (_urlKeyboard?.status == TouchScreenKeyboard.Status.Done
-            || _urlKeyboard?.status == TouchScreenKeyboard.Status.Canceled)
-        {
-            if (sourceURL != _urlKeyboard.text)
-            {
-                sourceURL = _urlKeyboard.text;
-                StartStream();
-            }
-            _urlKeyboard = null;
-        }
-    }
+    // void Update()
+    // {
+    //     if (_urlKeyboard?.status == TouchScreenKeyboard.Status.Done
+    //         || _urlKeyboard?.status == TouchScreenKeyboard.Status.Canceled)
+    //     {
+    //         if (sourceURL != _urlKeyboard.text)
+    //         {
+    //             sourceURL = _urlKeyboard.text;
+    //             StartStream();
+    //         }
+    //         _urlKeyboard = null;
+    //     }
+    // }
 
     public void OnEditSourceUrlButtonClicked()
     {
-        _urlKeyboard = TouchScreenKeyboard.Open(sourceURL, TouchScreenKeyboardType.URL, false, false, false);
+        var keyboardInputManager = FindObjectOfType<KeyboardInputManager>();
+        keyboardInputManager.RequestKeyboardInput(KeyboardInputManager.InputMode.URL, newUrl =>
+        {
+            if (sourceURL != newUrl)
+            {
+                sourceURL = newUrl;
+                StartStream();
+            }
+        });
     }
+
 
     private void StartStream()
     {

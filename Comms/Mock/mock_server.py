@@ -18,6 +18,7 @@ The script continuously listens for messages from the HoloLens and processes the
 """
 
 import asyncio # Import the asyncio library for asynchronous I/O
+import socket # Import the socket library for determining IP address
 import concurrent.futures # Import the concurrent.futures library for thread-based parallelism
 import struct # Import the struct library for working with C-style data structures
 import time # Import the struct library for working with C-style data structures
@@ -29,6 +30,13 @@ torques = [0] * 6 # Initialize a list of 6 zeroes to store torque values for eac
 messages = ["DOWN"] # Initialize a list with the initial message "DOWN"
 executor = concurrent.futures.ThreadPoolExecutor(max_workers=1) # Create a ThreadPoolExecutor with a single worker
 
+def get_ip_address():
+    try:
+        hostname = socket.gethostname()
+        ip_address = socket.gethostbyname(hostname)
+        return ip_address
+    except:
+        return "Error: Unable to get IP address"
 
 def comm_robot():
     rtde_c = RTDEControlInterface("169.254.9.43") # Create a control interface with the robot's IP address
@@ -68,14 +76,37 @@ async def comm_hololens(): # Define the asynchronous function that communicates 
 
     await asyncio.start_server(callback, host="0.0.0.0", port=21200) # Start the server, listening on all available network interfaces and using port 21200, with the callback function to handle connections. Note that the host number is basically just the IP address, and the port number refers to a port of communication to host your application on.
 
+async def receive_image(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
+    print("Connected to Image Sender")
+    while True:
+        try:
+            # Receive the image size
+            image_size_data = await reader.readexactly(4)
+            image_size = struct.unpack("!I", image_size_data)[0]
+
+            # Receive the image data
+            image_data = await reader.readexactly(image_size)
+            
+            # Save the received image
+            with open("received_image.png", "wb") as img_file:
+                img_file.write(image_data)
+
+            # Send an acknowledgment to the sender
+            writer.write(b"ACK")
+            await writer.drain()
+
+        except asyncio.IncompleteReadError:
+            break
 
 async def main():
-    loop = asyncio.get_running_loop() # Get the current event loop
-    await asyncio.gather( # Run the following tasks concurrently and wait for their completion
-        comm_hololens(), # Run the comm_hololens() function as an asynchronous task
-        loop.run_in_executor(executor, comm_robot) # Run the comm_robot() function in the ThreadPoolExecutor, allowing it to run concurrently with the asynchronous tasks
-    )
+    print(f"Running on IP: {get_ip_address()}")  # Add this line
 
+    loop = asyncio.get_running_loop()
+    await asyncio.gather(
+        comm_hololens(),
+        loop.run_in_executor(executor, comm_robot),
+        asyncio.start_server(receive_image, host="0.0.0.0", port=21201),
+    )
 
 if __name__ == "__main__":
     asyncio.run(main())
