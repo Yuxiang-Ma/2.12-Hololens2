@@ -67,16 +67,16 @@ public class RobotController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (_keyboard?.status == TouchScreenKeyboard.Status.Done
-            || _keyboard?.status == TouchScreenKeyboard.Status.Canceled)
-        {
-            if (ServerIp != _keyboard.text)
-            {
-                ServerIp = _keyboard.text;
-                _ipChanged = true;
-            }
-            _keyboard = null;
-        }
+        // if (_keyboard?.status == TouchScreenKeyboard.Status.Done
+        //     || _keyboard?.status == TouchScreenKeyboard.Status.Canceled)
+        // {
+        //     if (ServerIp != _keyboard.text)
+        //     {
+        //         ServerIp = _keyboard.text;
+        //         _ipChanged = true;
+        //     }
+        //     _keyboard = null;
+        // }
 
         var text = "2.12 Starter App\n";
         var serverIp = _keyboard == null ? ServerIp : _keyboard.text;
@@ -177,8 +177,15 @@ public class RobotController : MonoBehaviour
 
     public void OnEditHostIpButtonClicked()
     {
-        _keyboard = TouchScreenKeyboard.Open(ServerIp,
-            TouchScreenKeyboardType.DecimalPad, false, false, false);
+        var keyboardInputManager = FindObjectOfType<KeyboardInputManager>();
+        keyboardInputManager.RequestKeyboardInput(KeyboardInputManager.InputMode.IPAddress, newInput =>
+        {
+            if (ServerIp != newInput)
+            {
+                ServerIp = newInput;
+                _ipChanged = true;
+            }
+        });
     }
 
     public void OnUR5ButtonClicked()
