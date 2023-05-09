@@ -132,7 +132,21 @@ public class RobotController : MonoBehaviour
                     if (_stateChanged)
                     {
                         message = "UR5 state changed\n";
-                        message = _state == State.Start ? "START" : "STOP";
+                        if (_UR5Initiated == 1)
+                        {
+                            if (_state == State.Start)
+                            {
+                                message = "START";
+                            }
+                            else
+                            {
+                                message = "STOP";
+                            }
+                        }
+                        else
+                        {
+                            message = "UR5 not initiated, please wait...";
+                        }
                         _stateChanged = false;
                         print(message);
                     }
