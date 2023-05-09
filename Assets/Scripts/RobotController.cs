@@ -19,7 +19,7 @@ using Microsoft.MixedReality.Toolkit.UI;
 public class RobotController : MonoBehaviour
 {
     // Edit relay IP from the Unity Editor.
-    public string ServerIp;
+    public static string ServerIp;
     public int Port = 21200;
     public int TimeoutMs = 2000;
     public TextMeshPro TextMesh;

@@ -26,7 +26,8 @@ public class DownloadDisplay : MonoBehaviour
         try
         {
             WebClient client = new WebClient();
-            byte[] myDataBuffer = client.DownloadData("http://192.168.0.3:4000/uploads/display_image.png");
+            string serverIp = RobotController.ServerIp;
+            byte[] myDataBuffer = client.DownloadData($"http://{serverIp}:4000/uploads/display_image.png");
 
             Texture2D tex = new Texture2D(2, 2);
             tex.LoadImage(myDataBuffer);
