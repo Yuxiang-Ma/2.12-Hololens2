@@ -19,7 +19,7 @@ using Microsoft.MixedReality.Toolkit.UI;
 public class RobotController : MonoBehaviour
 {
     // Edit relay IP from the Unity Editor.
-    public string ServerIp;
+    public static string ServerIp;
     public int Port = 21200;
     public int TimeoutMs = 2000;
     public TextMeshPro TextMesh;
@@ -132,7 +132,21 @@ public class RobotController : MonoBehaviour
                     if (_stateChanged)
                     {
                         message = "UR5 state changed\n";
-                        message = _state == State.Start ? "START" : "STOP";
+                        if (_UR5Initiated == 1)
+                        {
+                            if (_state == State.Start)
+                            {
+                                message = "START";
+                            }
+                            else
+                            {
+                                message = "STOP";
+                            }
+                        }
+                        else
+                        {
+                            message = "UR5 not initiated, please wait...";
+                        }
                         _stateChanged = false;
                         print(message);
                     }

@@ -25,6 +25,11 @@ import time # Import the struct library for working with C-style data structures
 from rtde_control import RTDEControlInterface # Import RTDEControlInterface from rtde_control library for controlling the UR5 robot
 from rtde_receive import RTDEReceiveInterface # Import RTDEReceiveInterface from rtde_receive library for receiving data from the UR5 robot
 
+from ur5_utils import move_ur5_to_start, start_ur5_action # Import the move_ur5_to_start and start_ur5_action functions from the ur5_utils module
+
+# Constant Definitions
+firstInitialization = True
+
 torques = [0] * 6 # Initialize a list of 6 zeroes to store torque values for each joint
 messages = ["DOWN"] # Initialize a list with the initial message "DOWN"
 executor = concurrent.futures.ThreadPoolExecutor(max_workers=1) # Create a ThreadPoolExecutor with a single worker
@@ -48,6 +53,27 @@ def comm_robot():
             elif message == "DOWN": # If the message is "DOWN"
                 rtde_c.stopL(10.0) # Stop the robot's linear motion with a deceleration of 10 m/s^2
                 rtde_c.moveL(down_pose, asynchronous=True)  # Move the robot to the down_pose asynchronously
+            elif message == "START": # If the message is "START"
+                if firstInitialization:
+                    # move the ur5 to the start position (above the chest)
+                    r = move_ur5_to_start()
+                else:
+                    # start the robot chest finding + pump action routine
+                    start_ur5_action(r)
+                    firstInitialization = False
+            elif message == "STOP": # If the message is "STOP"
+                if firstInitialization:
+                    # stop the robot motion with a deceleration of 10 m/s^2
+                    rtde_c.stopL(10.0)
+                else:
+                    # get the current pose
+                    current_pose = rtde_r.getActualTCPPose()
+                    # stop the robot motion with a deceleration of 10 m/s^2
+                    rtde_c.stopL(10.0)
+                    # move the robot end effector up by 0.1 m from the current position
+                    safe_pose = current_pose[:]
+                    safe_pose[2] += 0.1
+                    rtde_c.moveL(safe_pose, asynchronous=True)
         time.sleep(0.01) # Sleep for 10 milliseconds to reduce CPU usage
 
 
