@@ -145,7 +145,7 @@ public class RobotController : MonoBehaviour
                         }
                         else
                         {
-                            message = "UR5 not initiated, please wait...";
+                            message = "UR5 not initiated, please wait....";
                         }
                         _stateChanged = false;
                         print(message);
