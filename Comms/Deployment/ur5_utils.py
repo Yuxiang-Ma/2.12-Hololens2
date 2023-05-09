@@ -1,6 +1,6 @@
 # First import the library
-import gi
-gi.require_version('Gtk', '2.0')
+# import gi
+# gi.require_version('Gtk', '2.0')
 import pyrealsense2 as rs
 import cv2
 import numpy as np
@@ -219,7 +219,7 @@ def move_ur5_to_start():
     return r
 
 
-def start_ur5_action(pump_period=550,plot_flag=True,ur5_ip="169.254.9.43"):
+def start_ur5_action(r,pump_period=550,plot_flag=True,ur5_ip="169.254.9.43"):
     """
     Executes a control loop for the UR5 robot. Moves the robot to an initial position, applies a sine wave force, 
     and records the force exerted and the position of the robot. The robot is controlled using the RTDE interface.
@@ -256,8 +256,8 @@ def start_ur5_action(pump_period=550,plot_flag=True,ur5_ip="169.254.9.43"):
     #joint_q = joint_q * 2*3.1415/360.0
 
     # Move to initial joint position with a regular moveJ
-    rtde_c.moveJ(joint_q, 1.50, 1.4, True)
-    #rtde_c.moveL(r, 1.50, 1.4, True)
+    # rtde_c.moveJ(joint_q, 1.50, 1.4, True)
+    rtde_c.moveL(r, 1.50, 1.4, True)
 
     sleep(2.5)
     #rtde_c.stopJ(0.5)

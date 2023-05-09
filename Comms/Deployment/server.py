@@ -56,10 +56,10 @@ def comm_robot():
             elif message == "START": # If the message is "START"
                 if firstInitialization:
                     # move the ur5 to the start position (above the chest)
-                    move_ur5_to_start()
+                    r = move_ur5_to_start()
                 else:
                     # start the robot chest finding + pump action routine
-                    start_ur5_action()
+                    start_ur5_action(r)
                     firstInitialization = False
             elif message == "STOP": # If the message is "STOP"
                 if firstInitialization:
