@@ -15,9 +15,10 @@ import asyncio
 import concurrent.futures
 import struct
 import time
+import threading
 #from ur5_robot_integrate import UR5Robot
 
-SAVE_PATH = "~.display_image.png" #"../img/display_image.png"
+SAVE_PATH = os.path.expanduser(f"~{os.sep}display_image.png") #"../img/display_image.png"
 DISPLAY_PERIOD = 10  # seconds
 READ_FREQ = 0.5  # seconds
 DPI = 100
@@ -26,7 +27,13 @@ IMG_SIZE = (640, 480)  # (width, height)
 PAUSE_TIME = 0.0000000001
 UR5IP = "192.168.0.99"
 
-async def plot_data(fig, axs, ts, forces, displacements, ROI=int(DISPLAY_PERIOD/READ_FREQ), save=True):
+t_current = []
+force_current = []
+pos_current = []
+
+fig, axs = plt.subplots(N_ROWS, 1, figsize=(IMG_SIZE[0]/DPI, IMG_SIZE[1]/DPI))
+
+def plot_data(save=True)#fig, axs, ts, forces, displacements, ROI=int(DISPLAY_PERIOD/READ_FREQ), save=True):
     """Update plot with current data from the UR5 robot.
         args:    fig (Figure): figure object
                  axs (Axes): axes object
@@ -42,10 +49,10 @@ async def plot_data(fig, axs, ts, forces, displacements, ROI=int(DISPLAY_PERIOD/
     #displacements = np.array(displacements)
 
     # Plot
-    axs[0].plot(ts, forces)
+    axs[0].plot(t_current, force_current)
     axs[0].set_title("Force")
     axs[0].grid()
-    axs[1].plot(ts, displacements)
+    axs[1].plot(t_current, pos_current)
     axs[1].set_title("Displacement")
     axs[1].grid()
     #fig.tight_layout()
@@ -228,7 +235,7 @@ def move_ur5_to_start():
     return r
 
 
-def start_ur5_action(r,pump_period=550,plot_flag=True,ur5_ip="169.254.9.43"):
+async def start_ur5_action(r,pump_period=550,plot_flag=True,ur5_ip="169.254.9.43"):
     """
     Executes a control loop for the UR5 robot. Moves the robot to an initial position, applies a sine wave force, 
     and records the force exerted and the position of the robot. The robot is controlled using the RTDE interface.
@@ -291,7 +298,8 @@ def start_ur5_action(r,pump_period=550,plot_flag=True,ur5_ip="169.254.9.43"):
     t0 = 0
 
     # Execute 500Hz control loop for 4 seconds, each cycle is 2ms
-    for i in range(10000):
+    plot_initiated = False
+    while True:
         t_start = rtde_c.initPeriod()
         
 
@@ -307,8 +315,13 @@ def start_ur5_action(r,pump_period=550,plot_flag=True,ur5_ip="169.254.9.43"):
         force_out.append(np.linalg.norm(rtde_r.getActualTCPForce()[2]))
         #pos_out.append(initial_target_z - z_val_cur)
 
-        if plot_flag:
-            loop.run_until_complete(plot_data(fig, axs, t_out[-5:], force_out[-5:], pos_out[-5:]))
+        if not plot_initiated:
+            def plot_loop():
+                while True:
+                    plot_data()
+                    sleep(READ_FREQ)
+            threading.Thread(target=plot_loop).start()
+            plot_initiated = True
         
         rtde_c.waitPeriod(t_start)
 

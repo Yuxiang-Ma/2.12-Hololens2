@@ -29,15 +29,17 @@ from ur5_utils import move_ur5_to_start, start_ur5_action # Import the move_ur5_
 
 # Constant Definitions
 firstInitialization = True
+UR5IP = "169.254.9.43"
 
 torques = [0] * 6 # Initialize a list of 6 zeroes to store torque values for each joint
 messages = ["DOWN"] # Initialize a list with the initial message "DOWN"
 executor = concurrent.futures.ThreadPoolExecutor(max_workers=1) # Create a ThreadPoolExecutor with a single worker
 
 
-def comm_robot():
-    rtde_c = RTDEControlInterface("169.254.9.43") # Create a control interface with the robot's IP address
-    rtde_r = RTDEReceiveInterface("169.254.9.43") # Create a receive interface with the robot's IP address
+async def comm_robot():
+    start_task = None
+    rtde_c = RTDEControlInterface(UR5IP) # Create a control interface with the robot's IP address
+    rtde_r = RTDEReceiveInterface(UR5IP) # Create a receive interface with the robot's IP address
     print("Connected to UR5") # Print a message to indicate successful connection to the robot
     up_pose = rtde_r.getActualTCPPose() # Get the current Tool Center Point pose of the robot
     down_pose = up_pose[:] # Create a copy of the current TCP pose for the down pose
@@ -55,11 +57,19 @@ def comm_robot():
                 rtde_c.moveL(down_pose, asynchronous=True)  # Move the robot to the down_pose asynchronously
             elif message == "START": # If the message is "START"
                 if firstInitialization:
+                    # if there is a running start task, cancel it
+                    if start_task is not None:
+                        start_task.cancel()
+                        start_task = None
+                    start_task = asyncio.create_task()
                     # move the ur5 to the start position (above the chest)
                     r = move_ur5_to_start()
                 else:
-                    # start the robot chest finding + pump action routine
-                    start_ur5_action(r)
+                    # if there is a running start task, cancel it
+                    if start_task is not None:
+                        start_task.cancel()
+                        start_task = None
+                    start_task = asyncio.create_task(start_ur5_action(r))
                     firstInitialization = False
             elif message == "STOP": # If the message is "STOP"
                 if firstInitialization:
@@ -98,7 +108,7 @@ async def main():
     loop = asyncio.get_running_loop() # Get the current event loop
     await asyncio.gather( # Run the following tasks concurrently and wait for their completion
         comm_hololens(), # Run the comm_hololens() function as an asynchronous task
-        loop.run_in_executor(executor, comm_robot) # Run the comm_robot() function in the ThreadPoolExecutor, allowing it to run concurrently with the asynchronous tasks
+        comm_robot(),
     )
 
 
