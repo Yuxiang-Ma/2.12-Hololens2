@@ -219,7 +219,7 @@ def move_ur5_to_start():
     return r
 
 
-def start_ur5_action(pump_period=550,plot_flag=True):
+def start_ur5_action(pump_period=550,plot_flag=True,ur5_ip="169.254.9.43"):
     """
     Executes a control loop for the UR5 robot. Moves the robot to an initial position, applies a sine wave force, 
     and records the force exerted and the position of the robot. The robot is controlled using the RTDE interface.
@@ -232,9 +232,10 @@ def start_ur5_action(pump_period=550,plot_flag=True):
     N_ROWS = 2
     IMG_SIZE = (640, 480)  # (width, height)
     PAUSE_TIME = 0.0000000001
+    UR5IP = "169.254.9.43"
 
-    rtde_c = RTDEControl("169.254.9.43")
-    rtde_r = rtde_receive.RTDEReceiveInterface("169.254.9.43")
+    rtde_c = RTDEControl(UR5IP)
+    rtde_r = rtde_receive.RTDEReceiveInterface(UR5IP)
 
 
     task_frame = [0, 0, 0, 0, 0, 0]
