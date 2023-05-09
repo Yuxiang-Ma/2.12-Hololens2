@@ -9,26 +9,25 @@ public class WebStream : MonoBehaviour
 {
     public MeshRenderer frame;    //Mesh for displaying video
 
-    public static string IpURL = "10.29.17.61:3000";
+    public static string MobileURL = "10.29.48.185:2000/video";
 
-    public static string FormatURL(string inputURL) // adds http:// to beginning of URL for quicker changing of URL in HoloLens.
-    {
-        return $"http://{inputURL}";
-    }
+    public static string UR5URL = "10.29.17.61:3000";
 
-    public string sourceURL = FormatURL(IpURL);
+    private string sourceURL;
 
     private Texture2D texture;
     private Stream stream;
-    public TextMeshPro textMesh = null;
+    public TextMeshPro textMesh;
 
-    private TouchScreenKeyboard _urlKeyboard;
+    //private TouchScreenKeyboard _urlKeyboard;
 
+    private State _state;
     void Start()
     {
-        if (textMesh == null)
+        _state = State.Mobile;
+        sourceURL = FormatURL(_state == State.Mobile ? MobileURL : UR5URL);
+        if (textMesh != null)
         {
-            textMesh = GetComponent<TextMeshPro>();
             textMesh.text = $"stream is starting";
         }
         texture = new Texture2D(2, 2);
@@ -49,18 +48,43 @@ public class WebStream : MonoBehaviour
     //         _urlKeyboard = null;
     //     }
     // }
+    public void OnSwtichVideoButtonClicked()
+    {
+        _state = _state == State.Mobile ? State.UR5 : State.Mobile;
+        // restart stream after swtich
+        StartStream();
+    }
 
     public void OnEditSourceUrlButtonClicked()
     {
         var keyboardInputManager = FindObjectOfType<KeyboardInputManager>();
         keyboardInputManager.RequestKeyboardInput(KeyboardInputManager.InputMode.MobileRobotVideoIPAddress, newUrl =>
         {
+            //UpdateURL(newUrl);
             if (sourceURL != newUrl)
             {
                 sourceURL = FormatURL(newUrl);
                 StartStream();
             }
         });
+    }
+
+    private void UpdateURL(string newUrl)
+    {
+        if (_state == State.Mobile) { 
+            if (FormatURL(MobileURL) != newUrl) 
+            {
+                MobileURL = newUrl;
+                StartStream();
+            }
+        }
+        else {
+            if (FormatURL(UR5URL) != newUrl)
+            {
+                UR5URL = newUrl;
+                StartStream();
+            }
+        }
     }
 
 
@@ -70,9 +94,9 @@ public class WebStream : MonoBehaviour
         {
             stream.Close();
         }
-
+        // always update source URL before start Stream
+        sourceURL = FormatURL(_state == State.Mobile ? MobileURL : UR5URL);
         // create HTTP request
-        
         HttpWebRequest req = (HttpWebRequest)WebRequest.Create(sourceURL);
         //Optional (if authorization is Digest)
         req.Credentials = new NetworkCredential("username", "password");
@@ -92,9 +116,8 @@ public class WebStream : MonoBehaviour
         while (true)
         {
             int bytesToRead = FindLength(stream);
-            if (textMesh == null)
+            if (textMesh != null)
             {
-                textMesh = GetComponent<TextMeshPro>();
                 var floatingText = $"stream is read {bytesToRead}\n";
                 floatingText += $"Video URL: {sourceURL}";
                 textMesh.text = floatingText;
@@ -161,4 +184,15 @@ public class WebStream : MonoBehaviour
         }
         return -1;
     }
+    private static string FormatURL(string inputURL) // adds http:// to beginning of URL for quicker changing of URL in HoloLens.
+    {
+        return $"http://{inputURL}";
+    }
+
+    private enum State
+    {
+        UR5,
+        Mobile,
+    }
 }
+

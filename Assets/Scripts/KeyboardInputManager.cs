@@ -6,6 +6,7 @@ public class KeyboardInputManager : MonoBehaviour
     {
         None,
         ServerIPAddress,
+        UR5VideoIPAddress,
         MobileRobotVideoIPAddress
     }
 
@@ -23,6 +24,9 @@ public class KeyboardInputManager : MonoBehaviour
                 keyboard = TouchScreenKeyboard.Open("", TouchScreenKeyboardType.DecimalPad, false, false, false);
                 break;
             case InputMode.MobileRobotVideoIPAddress:
+                keyboard = TouchScreenKeyboard.Open("", TouchScreenKeyboardType.URL, false, false, false);
+                break;
+            case InputMode.UR5VideoIPAddress:
                 keyboard = TouchScreenKeyboard.Open("", TouchScreenKeyboardType.URL, false, false, false);
                 break;
         }
