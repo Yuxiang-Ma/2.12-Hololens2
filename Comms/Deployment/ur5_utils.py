@@ -17,6 +17,15 @@ import struct
 import time
 #from ur5_robot_integrate import UR5Robot
 
+SAVE_PATH = "~.display_image.png" #"../img/display_image.png"
+DISPLAY_PERIOD = 10  # seconds
+READ_FREQ = 0.5  # seconds
+DPI = 100
+N_ROWS = 2
+IMG_SIZE = (640, 480)  # (width, height)
+PAUSE_TIME = 0.0000000001
+UR5IP = "192.168.0.99"
+
 async def plot_data(fig, axs, ts, forces, displacements, ROI=int(DISPLAY_PERIOD/READ_FREQ), save=True):
     """Update plot with current data from the UR5 robot.
         args:    fig (Figure): figure object
@@ -225,17 +234,8 @@ def start_ur5_action(r,pump_period=550,plot_flag=True,ur5_ip="169.254.9.43"):
     and records the force exerted and the position of the robot. The robot is controlled using the RTDE interface.
     """
 
-    SAVE_PATH = "/home/ur5-2/roboresponse/manipulator/display_image.png" #"../img/display_image.png"
-    DISPLAY_PERIOD = 10  # seconds
-    READ_FREQ = 0.5  # seconds
-    DPI = 100
-    N_ROWS = 2
-    IMG_SIZE = (640, 480)  # (width, height)
-    PAUSE_TIME = 0.0000000001
-    UR5IP = "169.254.9.43"
-
-    rtde_c = RTDEControl(UR5IP)
-    rtde_r = rtde_receive.RTDEReceiveInterface(UR5IP)
+    rtde_c = RTDEControl(ur5_ip)
+    rtde_r = rtde_receive.RTDEReceiveInterface(ur5_ip)
 
 
     task_frame = [0, 0, 0, 0, 0, 0]
