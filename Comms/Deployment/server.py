@@ -80,9 +80,9 @@ async def comm_robot():
                     current_pose = rtde_r.getActualTCPPose()
                     # stop the robot motion with a deceleration of 10 m/s^2
                     rtde_c.stopL(10.0)
-                    # move the robot end effector up by 0.1 m from the current position
+                    # move the robot end effector up by 0.05 m from the current position
                     safe_pose = current_pose[:]
-                    safe_pose[2] += 0.1
+                    safe_pose[2] += 0.05
                     rtde_c.moveL(safe_pose, asynchronous=True)
         time.sleep(0.01) # Sleep for 10 milliseconds to reduce CPU usage
 
