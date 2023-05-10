@@ -33,7 +33,7 @@ pos_current = []
 
 fig, axs = plt.subplots(N_ROWS, 1, figsize=(IMG_SIZE[0]/DPI, IMG_SIZE[1]/DPI))
 
-def plot_data(save=True)#fig, axs, ts, forces, displacements, ROI=int(DISPLAY_PERIOD/READ_FREQ), save=True):
+def plot_data(save=True): #fig, axs, ts, forces, displacements, ROI=int(DISPLAY_PERIOD/READ_FREQ), save=True):
     """Update plot with current data from the UR5 robot.
         args:    fig (Figure): figure object
                  axs (Axes): axes object
@@ -60,6 +60,8 @@ def plot_data(save=True)#fig, axs, ts, forces, displacements, ROI=int(DISPLAY_PE
     #plt.pause(PAUSE_TIME)
     if save:
         plt.savefig(SAVE_PATH, dpi=DPI)
+    axs[0].clear()
+    axs[1].clear()
 
 def rs_to_ur5(x_rs, y_rs, z_rs):
     #converts from realsense coords to ur5 coords
@@ -101,8 +103,8 @@ def move_ur5_to_start():
 
     # Configure streams
     config = rs.config()
-    config.enable_stream(rs.stream.depth, 1280, 720, rs.format.z16, 30)
-    config.enable_stream(rs.stream.color, 1280, 720, rs.format.bgr8, 30)
+    config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 12)
+    config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 12)
 
     # Start streaming
     profile = pipeline.start(config)
@@ -272,6 +274,10 @@ async def start_ur5_action(r,pump_period=550,plot_flag=True,ur5_ip="169.254.9.43
     speed = [0, 0, -0.050, 0, 0, 0]
     rtde_c.moveUntilContact(speed)
 
+    target = rtde_r.getActualTCPPose()
+
+    initial_target_z = target[2]
+
     #get jacobian
     #smoother motion
     #can we control joint angles/velocities directly? wihtout using the moveJ
@@ -282,9 +288,9 @@ async def start_ur5_action(r,pump_period=550,plot_flag=True,ur5_ip="169.254.9.43
 
     amp = 200
 
-    t_out = []
-    force_out = []
-    pos_out = []
+    t_out = t_current
+    force_out = force_current
+    pos_out = pos_current
 
     fig, axs = plt.subplots(N_ROWS, 1, figsize=(IMG_SIZE[0]/DPI, IMG_SIZE[1]/DPI))
     loop = asyncio.get_event_loop()
@@ -299,32 +305,46 @@ async def start_ur5_action(r,pump_period=550,plot_flag=True,ur5_ip="169.254.9.43
 
     # Execute 500Hz control loop for 4 seconds, each cycle is 2ms
     plot_initiated = False
-    while True:
-        t_start = rtde_c.initPeriod()
-        
+    terminate_thread = False
+    i = -1
+    try:
+        while True:
+            i += 1
+            t_start = rtde_c.initPeriod()
 
-        sine_target = - np.abs(amp*np.sin(2*np.pi*i/T))+100
-        #print(sine_target)
-        wrench_up = [0, 0, sine_target, 0, 0, 0]
+            sine_target = - np.abs(amp*np.sin(2*np.pi*i/T))+100
+            #print(sine_target)
+            wrench_up = [0, 0, sine_target, 0, 0, 0]
 
-        rtde_c.forceMode(task_frame, selection_vector, wrench_up, force_type, limits)
+            rtde_c.forceMode(task_frame, selection_vector, wrench_up, force_type, limits)
 
-        pos_cur = rtde_r.getActualTCPPose()
-        #t0 += t_start
-        #t_out.append(t)
-        force_out.append(np.linalg.norm(rtde_r.getActualTCPForce()[2]))
-        #pos_out.append(initial_target_z - z_val_cur)
+            pos_cur = rtde_r.getActualTCPPose()
+            #t0 += t_start
+            t_out.append(t)
+            force_out.append(np.linalg.norm(rtde_r.getActualTCPForce()[2]))
+            pos_out.append(initial_target_z - pos_cur[2])
 
-        if not plot_initiated:
-            def plot_loop():
-                while True:
-                    plot_data()
-                    sleep(READ_FREQ)
-            threading.Thread(target=plot_loop).start()
-            plot_initiated = True
-        
-        rtde_c.waitPeriod(t_start)
+            # t_current = t_out[-5:]
+            # pos_current = pos_out[-5:]
+            # force_current = force_out[-5:]
 
+            if not plot_initiated:
+                def plot_loop():
+                    while True:
+                        if terminate_thread or t_current[-1] > 20:
+                            break
+                        plot_data()
+                        sleep(READ_FREQ)
+                threading.Thread(target=plot_loop).start()
+                plot_initiated = True
+            
+            rtde_c.waitPeriod(t_start)
+            await asyncio.sleep(0)
+    except asyncio.CancelledError:
+        terminate_thread = True
+        rtde_c.stopScript()
+        print('Task was cancelled')
+        raise
 
     #fig, ax = plt.subplots()
     #ax.plot(t_out, force_out)
@@ -347,7 +367,6 @@ async def start_ur5_action(r,pump_period=550,plot_flag=True,ur5_ip="169.254.9.43
 
 
     #rtde_c.forceModeStop()
-    rtde_c.stopScript()
 
 
 

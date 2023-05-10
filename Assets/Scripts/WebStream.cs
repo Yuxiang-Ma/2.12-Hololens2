@@ -11,9 +11,9 @@ public class WebStream : MonoBehaviour
 
     public static string IpURL = "10.29.17.61:3000";
 
-    public static string FormatURL(string inputURL) // adds http:// to beginning of URL for quicker changing of URL in HoloLens.
+    public static string FormatURL(string inputURL, string portValue) // adds http:// to beginning of URL for quicker changing of URL in HoloLens.
     {
-        return $"http://{inputURL}";
+        return $"http://{inputURL}:{portValue}";
     }
 
     public string sourceURL = FormatURL(IpURL);
@@ -26,6 +26,12 @@ public class WebStream : MonoBehaviour
 
     void Start()
     {
+        ipAddresses = new List<string>()
+            {
+                IPManager.MobileRobotVideoIP,
+                IPManager.UR5RealSenseIP
+            };
+            
         if (textMesh == null)
         {
             textMesh = GetComponent<TextMeshPro>();
@@ -52,15 +58,26 @@ public class WebStream : MonoBehaviour
 
     public void OnEditSourceUrlButtonClicked()
     {
-        var keyboardInputManager = FindObjectOfType<KeyboardInputManager>();
-        keyboardInputManager.RequestKeyboardInput(KeyboardInputManager.InputMode.MobileRobotVideoIPAddress, newUrl =>
+        // Cycle through the list of IP addresses
+        currentIpIndex = (currentIpIndex + 1) % ipAddresses.Count;
+
+        var newUrl = ipAddresses[currentIpIndex];
+        string portValue = "";
+
+        if (newUrl == IPManager.MobileRobotVideoIP)
         {
-            if (sourceURL != newUrl)
-            {
-                sourceURL = FormatURL(newUrl);
-                StartStream();
-            }
-        });
+            _portValue = "3000";
+        }
+        else if (newUrl == IPManager.UR5RealSenseIP)
+        {
+            _portValue = "5000";
+        }
+
+        if (sourceURL != newUrl)
+        {
+            sourceURL = FormatURL(newUrl,_portValue);
+            StartStream();
+        }
     }
 
 

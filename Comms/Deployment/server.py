@@ -34,7 +34,7 @@ UR5IP = "169.254.9.43"
 torques = [0] * 6 # Initialize a list of 6 zeroes to store torque values for each joint
 messages = ["DOWN"] # Initialize a list with the initial message "DOWN"
 executor = concurrent.futures.ThreadPoolExecutor(max_workers=1) # Create a ThreadPoolExecutor with a single worker
-
+message = ""
 
 async def comm_robot():
     start_task = None

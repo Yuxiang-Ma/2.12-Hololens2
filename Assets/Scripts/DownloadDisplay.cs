@@ -9,6 +9,7 @@ public class DownloadDisplay : MonoBehaviour
 {
     public GameObject MyImage;
     public WWW www;
+    public string ForceDisplacementIP;
 
     void Start()
     {
@@ -21,13 +22,26 @@ public class DownloadDisplay : MonoBehaviour
         UpdateImage();
     }
 
+    public void OnEditHostIpButtonClicked()
+    {
+        var keyboardInputManager = FindObjectOfType<KeyboardInputManager>();
+        keyboardInputManager.RequestKeyboardInput(KeyboardInputManager.InputMode.ForceDisplacementImageFeedIPAddress, newInput =>
+        {
+            if (ForceDisplacementIP != newInput)
+            {
+                ForceDisplacementIP = newInput;
+                _ipChanged = true;
+            }
+        });
+    }
+
     void UpdateImage()
     {
         try
         {
             WebClient client = new WebClient();
             string serverIp = RobotController.ServerIp;
-            byte[] myDataBuffer = client.DownloadData($"http://{serverIp}:4000/uploads/display_image.png");
+            byte[] myDataBuffer = client.DownloadData($"http://{ForceDisplacementIP}:4000/uploads/display_image.png");
 
             Texture2D tex = new Texture2D(2, 2);
             tex.LoadImage(myDataBuffer);
