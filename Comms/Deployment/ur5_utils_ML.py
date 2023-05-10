@@ -16,6 +16,8 @@ import concurrent.futures
 import struct
 import time
 import threading
+import torch
+from torchvision.transforms import transforms
 #from ur5_robot_integrate import UR5Robot
 
 SAVE_PATH = os.path.expanduser(f"~{os.sep}display_image.png") #"../img/display_image.png"
@@ -26,6 +28,63 @@ N_ROWS = 2
 IMG_SIZE = (640, 480)  # (width, height)
 PAUSE_TIME = 0.0000000001
 UR5IP = "192.168.0.99"
+
+# load pre-trained model
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+model = torch.load('triangle-detector.pt')
+model = model.to(device)
+model.eval()
+
+# Preprocessing function
+def preprocess(image):
+    # Convert BGR to RGB
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+    # Compute the smaller dimension
+    smaller_dim = min(image.shape[0], image.shape[1])
+
+    # Resize the smaller dimension to 100 while maintaining aspect ratio
+    aspect_ratio = 100.0 / smaller_dim
+    new_width = int(image.shape[1] * aspect_ratio)
+    new_height = int(image.shape[0] * aspect_ratio)
+
+    # Define padding if needed
+    pad_height = max(0, 100 - new_height) // 2
+    pad_width = max(0, 100 - new_width) // 2
+
+    transform = transforms.Compose([
+        transforms.ToPILImage(),
+        transforms.Resize((new_height, new_width)),
+        transforms.Pad((pad_width, pad_height)),
+        transforms.CenterCrop((100,100)),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[230.69874532, 219.4238513 , 199.98904761], std=[37.41321302, 58.85421664, 63.60300068])
+    ])
+
+    return transform(image), aspect_ratio
+
+def undo_preprocess(tensor, aspect_ratio, desired_shape=(480, 640)):
+    # calculate new height and width
+    new_height = int(tensor.shape[-1] / aspect_ratio)
+    new_width = int(tensor.shape[-2] / aspect_ratio)
+
+    # convert tensor to PIL image
+    tensor = transforms.ToPILImage()(tensor.squeeze(0))
+
+    # resize tensor to new dimensions using transfrms.Resize
+    tensor = transforms.Resize((new_height, new_width))(tensor)
+
+    # center crop the tensor based on the desired size
+    tensor = transforms.CenterCrop(desired_shape)(tensor)
+
+    # convert tensor back to numpy array
+    tensor = np.array(tensor.cpu())
+
+    # Resize the image back to the original size
+    output = cv2.resize(tensor, desired_shape)
+
+    return output
+
 
 t_current = []
 force_current = []
@@ -147,25 +206,34 @@ def move_ur5_to_start():
         depth_image = np.array(aligned_depth_frame.get_data())
         color_image = np.array(color_frame.get_data())
 
-        hsv = cv2.cvtColor(color_image, cv2.COLOR_BGR2HSV)
+        color_image_processed, scale_factor = preprocess(color_image).unsqueeze(0).to(device)
 
-        l_h = cv2.getTrackbarPos("L-H", "Trackbars")
-        l_s = cv2.getTrackbarPos("L-S", "Trackbars")
-        l_v = cv2.getTrackbarPos("L-V", "Trackbars")
-        u_h = cv2.getTrackbarPos("U-H", "Trackbars")
-        u_s = cv2.getTrackbarPos("U-S", "Trackbars")
-        u_v = cv2.getTrackbarPos("U-V", "Trackbars")
 
-        lower_red = np.array([l_h, l_s, l_v])
-        upper_red = np.array([u_h, u_s, u_v])
+        # get the prediction from the model
+        with torch.no_grad():
+            mask_pred = model(color_image_processed)      
 
-        mask1 = cv2.inRange(hsv, lower_red, upper_red)
+        # convert the mask to uint8 and undo the preprocessing resize operation
+        mask = np.uint8(mask_pred > 0.5)
+
+        # resize by first dividing by scale factor and then chopping the padding off the dimension that was shorter previously in the 640x480 image
+        mask1 = undo_preprocess(mask).squeeze().cpu().numpy()
+        
+        # l_h = cv2.getTrackbarPos("L-H", "Trackbars")
+        # l_s = cv2.getTrackbarPos("L-S", "Trackbars")
+        # l_v = cv2.getTrackbarPos("L-V", "Trackbars")
+        # u_h = cv2.getTrackbarPos("U-H", "Trackbars")
+        # u_s = cv2.getTrackbarPos("U-S", "Trackbars")
+        # u_v = cv2.getTrackbarPos("U-V", "Trackbars")
+
+        # lower_red = np.array([l_h, l_s, l_v])
+        # upper_red = np.array([u_h, u_s, u_v])
+
+        # mask1 = cv2.inRange(hsv, lower_red, upper_red)
         kernel = np.ones((5, 5), np.uint8)
         mask = cv2.erode(mask1, kernel)
-        #mask = cv2.dilate(mask1, kernel)
+        mask = cv2.dilate(mask1, kernel)
         
-        
-
         # Contours detection
         if int(cv2.__version__[0]) > 3:
             # Opencv 4.x.x
@@ -207,13 +275,13 @@ def move_ur5_to_start():
 
 
                         
-        # cv2.imshow("Frame", color_image)
-        # cv2.imshow("Mask", mask)
+        cv2.imshow("Frame", color_image)
+        cv2.imshow("Mask", mask)
 
-        # key = cv2.waitKey(1)
-        # if key == 27:
-        #     break
-        # sleep(.1)
+        key = cv2.waitKey(1)
+        if key == 27:
+            break
+        sleep(.1)
 
     cv2.destroyAllWindows()
 
