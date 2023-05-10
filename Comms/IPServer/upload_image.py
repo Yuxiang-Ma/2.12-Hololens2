@@ -3,7 +3,7 @@ from flask import Flask, render_template, send_from_directory
 
 app = Flask(__name__)
 
-IMAGE_FOLDER = '../../img'
+IMAGE_FOLDER = ''
 
 
 @app.route(f'/uploads/display_image.png')

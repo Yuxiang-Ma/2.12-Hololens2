@@ -1,43 +1,42 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using System;
-using System.Net;
+using UnityEngine.Networking;
 
 public class DownloadDisplay : MonoBehaviour
 {
-    public GameObject MyImage;
-    public WWW www;
+    string serverIp = RobotController.ServerIp; // Set this in the inspector
+    private RawImage myRawImage;
+    private Texture2D tex;
 
     void Start()
     {
-        UpdateImage();
-    }
-
-
-    void Update()
-    {
+        GameObject myImage = GameObject.Find("RawImage");
+        myRawImage = myImage.GetComponent<RawImage>();
+        tex = new Texture2D(2, 2);
         UpdateImage();
     }
 
     void UpdateImage()
     {
-        try
-        {
-            WebClient client = new WebClient();
-            string serverIp = RobotController.ServerIp;
-            byte[] myDataBuffer = client.DownloadData($"http://{serverIp}:4000/uploads/display_image.png");
+        StartCoroutine(DownloadImage());
+    }
 
-            Texture2D tex = new Texture2D(2, 2);
-            tex.LoadImage(myDataBuffer);
-
-            MyImage = GameObject.Find("RawImage");
-            MyImage.GetComponent<RawImage>().texture = tex;
-        }
-        catch
+    IEnumerator DownloadImage()
+    {
+        using (UnityWebRequest www = UnityWebRequestTexture.GetTexture($"http://{serverIp}:4000/uploads/display_image.png"))
         {
-            print("Failed to load image.");
+            yield return www.SendWebRequest();
+
+            if (www.result != UnityWebRequest.Result.Success)
+            {
+                Debug.Log(www.error);
+            }
+            else
+            {
+                tex = ((DownloadHandlerTexture)www.downloadHandler).texture;
+                myRawImage.texture = tex;
+            }
         }
     }
 }
