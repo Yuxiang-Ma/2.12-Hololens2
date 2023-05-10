@@ -21,7 +21,8 @@ import asyncio # Import the asyncio library for asynchronous I/O
 import concurrent.futures # Import the concurrent.futures library for thread-based parallelism
 import struct # Import the struct library for working with C-style data structures
 import time # Import the struct library for working with C-style data structures
-
+import subprocess
+# from script_5_9 import script_5_9
 from rtde_control import RTDEControlInterface # Import RTDEControlInterface from rtde_control library for controlling the UR5 robot
 from rtde_receive import RTDEReceiveInterface # Import RTDEReceiveInterface from rtde_receive library for receiving data from the UR5 robot
 
@@ -31,11 +32,12 @@ from ur5_utils import move_ur5_to_start, start_ur5_action # Import the move_ur5_
 firstInitialization = True
 
 torques = [0] * 6 # Initialize a list of 6 zeroes to store torque values for each joint
-messages = ["DOWN"] # Initialize a list with the initial message "DOWN"
+messages = [] # Initialize a list with the initial message "DOWN"
 executor = concurrent.futures.ThreadPoolExecutor(max_workers=1) # Create a ThreadPoolExecutor with a single worker
 
 
 def comm_robot():
+    firstInitialization = True
     rtde_c = RTDEControlInterface("169.254.9.43") # Create a control interface with the robot's IP address
     rtde_r = RTDEReceiveInterface("169.254.9.43") # Create a receive interface with the robot's IP address
     print("Connected to UR5") # Print a message to indicate successful connection to the robot
@@ -47,6 +49,7 @@ def comm_robot():
         torques = rtde_c.getJointTorques() # Update the torques variable with the current joint torques
         while len(messages) > 0: # While there are messages in the list
             message = messages.pop() # Pop the last message from the list
+            print(message)
             if message == "UP": # If the message is "UP"
                 rtde_c.stopL(10.0) # Stop the robot's linear motion with a deceleration of 10 m/s^2
                 rtde_c.moveL(up_pose, asynchronous=True) # Move the robot to the up_pose asynchronously
@@ -54,17 +57,29 @@ def comm_robot():
                 rtde_c.stopL(10.0) # Stop the robot's linear motion with a deceleration of 10 m/s^2
                 rtde_c.moveL(down_pose, asynchronous=True)  # Move the robot to the down_pose asynchronously
             elif message == "START": # If the message is "START"
-                if firstInitialization:
+            	rtde_c.disconnect()
+            	rtde_r.disconnect()
+            	import script_5_9
+            	rtde_c = RTDEControlInterface("169.254.9.43") # Create a control interface with the robot's IP address
+            	rtde_r = RTDEReceiveInterface("169.254.9.43") # Create a receive interface with the robot's IP address
+            	print("Reconnected to UR5") # Print a message to indicate successful connection to the robot
+            	# subprocess.run(['python3','script_5_9.py'])
+            	"""
+		if firstInitialization:
                     # move the ur5 to the start position (above the chest)
                     r = move_ur5_to_start()
+                    firstInitialization = False
                 else:
                     # start the robot chest finding + pump action routine
+                    subprocess.run(['python3','script_5_9.py'])
                     start_ur5_action(r)
                     firstInitialization = False
+                """
             elif message == "STOP": # If the message is "STOP"
                 if firstInitialization:
                     # stop the robot motion with a deceleration of 10 m/s^2
                     rtde_c.stopL(10.0)
+                    firstInitialization = False
                 else:
                     # get the current pose
                     current_pose = rtde_r.getActualTCPPose()
@@ -103,4 +118,7 @@ async def main():
 
 
 if __name__ == "__main__":
+    try:
+        subprocess.run(['python3', '/home/ravi/Documents/2.12-Hololens2-master/Comms/IPServer/upload_image.py'])
+    except: pass
     asyncio.run(main())
