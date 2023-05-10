@@ -8,15 +8,15 @@ using UnityEngine;
 using System.Buffers;
 using UnityEngine.Rendering;
 
-public class WebStream : MonoBehaviour
+public class PngShow : MonoBehaviour
 {
     public MeshRenderer frame;    //Mesh for displaying video
 
     public static string ServerIp = "10.29.9.107";
 
-    public static string MobileURL = $"{ServerIp}:4000/uploads/display_image.png";
+    //public static string MobileURL = $"10.29.9.107:4000/uploads/display_image.png";
     //public static string MobileURL = "10.29.81.150:2000/video";
-
+    public static string MobileURL = "https://thumbs.dreamstime.com/b/jpg-spelled-word-dice-letters-reflection-term-toy-cubes-bottom-studio-shot-white-background-46803015.jpg";
     public static string UR5URL = "muffin.local:8080/?action=stream";
 
     private string sourceURL;
@@ -67,14 +67,16 @@ public class WebStream : MonoBehaviour
 
     private void UpdateURL(string newUrl)
     {
-        if (_state == State.Mobile) { 
-            if (FormatURL(MobileURL) != newUrl) 
+        if (_state == State.Mobile)
+        {
+            if (FormatURL(MobileURL) != newUrl)
             {
                 MobileURL = newUrl;
                 StartStream();
             }
         }
-        else {
+        else
+        {
             if (FormatURL(UR5URL) != newUrl)
             {
                 UR5URL = newUrl;
@@ -103,15 +105,15 @@ public class WebStream : MonoBehaviour
             // get response stream
             stream = resp.GetResponseStream();
         }
-        catch (WebException e) 
+        catch (WebException e)
         {
             Debug.Log("Error: " + e.Status);
             textMesh.text = $"Invalid IP address{sourceURL}\n";
             textMesh.text += $"video display:{_state}";
             return;
         }
-            //GetFrame();
-            StartCoroutine(GetFrame());
+        //GetFrame();
+        StartCoroutine(GetFrame());
 
     }
 
@@ -122,20 +124,18 @@ public class WebStream : MonoBehaviour
 
         while (true)
         {
-            //int bytesToRead = FindLength(stream);
-            int bytesToRead = JpegData.Length;
-            
-            //Debug.Log("TextMesh Updated...");
-            //print(bytesToRead);
+            int bytesToRead = FindLength(stream);
+            //int bytesToRead = JpegData.Length;
+            Debug.Log($"bytesToRead: {bytesToRead}");
             if (stream.ReadByte() == -1)
             {
                 print("No stream read");
                 yield break;
             }
-            
+
             if (bytesToRead < 0)
                 bytesToRead = JpegData.Length;
-                
+
             int leftToRead = bytesToRead;
 
             while (leftToRead > 0)
@@ -145,64 +145,15 @@ public class WebStream : MonoBehaviour
                 yield return null;
             }
 
-            int startIndex = -1;
-            int endIndex = -1;
-            for (int i = 0; i < bytesToRead - 1; i++)
-            {
-                if (JpegData[i] == 0xFF && JpegData[i + 1] == 0xD8)
-                {
-                    startIndex = i;
-                }
-
-                if (startIndex != -1)
-                {
-                    if (JpegData[i] == 0xFF && JpegData[i + 1] == 0xD9)
-                    {
-                        endIndex = i + 2;
-                        break;
-                    }
-                }
-                
-            }
             if (textMesh != null)
             {
                 var floatingText = $"stream is read {bytesToRead}\n";
                 floatingText += $"Video URL: {sourceURL}\n";
-                //floatingText += $"frame{startIndex}{endIndex}\n";
                 floatingText += $"video display:{_state}";
                 textMesh.text = floatingText;
             }
 
-
-            if (startIndex == -1 || endIndex == -1)
-            {
-                texture.LoadImage(JpegData);
-                continue;
-            }
-
-            Byte[] frameData = new Byte[endIndex-startIndex];
-            System.Buffer.BlockCopy(JpegData, startIndex, frameData, 0, frameData.Length);
-
-            //string data = System.Text.Encoding.ASCII.GetString(JpegData, 0, bytesToRead);
-            //int startIndex = data.IndexOf(boundary);
-            //int endIndex = -1;
-            //if (startIndex >= 0)
-            //{
-            //    startIndex += boundary.Length;
-            //    endIndex = data.IndexOf(boundary, startIndex);
-            //    if (endIndex >= 0)
-            //    {
-            //        endIndex -= 2; // skip the trailing \r\n
-            //        //startIndex += 200;
-            //        JpegData = System.Text.Encoding.ASCII.GetBytes(data.Substring(startIndex, endIndex));
-            //    }
-            //}
-            //Debug.Log($"detected frame length{endIndex}");
-            MemoryStream ms = new MemoryStream(JpegData, 0, JpegData.Length, false, true);
-
-            //floatingText +=  $"Data Read{data}";
-            //texture.LoadImage(ms.GetBuffer());
-            texture.LoadImage(frameData);
+            texture.LoadImage(JpegData);
             frame.material.mainTexture = texture;
             stream.ReadByte(); // CR after bytes
             stream.ReadByte(); // LF after bytes

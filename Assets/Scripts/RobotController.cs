@@ -39,7 +39,7 @@ public class RobotController : MonoBehaviour
 
     private bool _stateChanged;
 
-    private bool _sliderChanged;
+    //private bool _sliderChanged;
 
     private bool _connected;
 
@@ -59,7 +59,7 @@ public class RobotController : MonoBehaviour
         _jointTorques = new float[6];
         _state = State.Stop;
         _stateChanged = false;
-        _sliderChanged = false;
+        //_sliderChanged = false;
         _UR5Initiated = -1;
         Task.Run(ConnectionLoop);
     }
@@ -82,7 +82,7 @@ public class RobotController : MonoBehaviour
         var serverIp = _keyboard == null ? ServerIp : _keyboard.text;
         var status = _connected ? "Connected" : "Disconnected";
         text += $"Server IP: {serverIp} ({status})\n";
-        text += "Torques: " + string.Join(", ", _jointTorques.Select(torque => $"{torque:00.00}")) + "\n";
+        //text += "Torques: " + string.Join(", ", _jointTorques.Select(torque => $"{torque:00.00}")) + "\n";
         text += "UR5 currently " + (_state == State.Start ? "START\n" : "STOP\n");
         if (_UR5Initiated != -1)
         {
@@ -124,7 +124,7 @@ public class RobotController : MonoBehaviour
                     var message = "";
                     if (_UR5Initiated == 0)
                     {
-                        message = "Initiate UR5\n";
+                        message = "START";
                         _UR5Initiated = 1;
                         print(message);
                     }
@@ -137,11 +137,11 @@ public class RobotController : MonoBehaviour
                         {
                             if (_state == State.Start)
                             {
-                                message = "START\n";
+                                message = "START";
                             }
                             else
                             {
-                                message = "STOP\n";
+                                message = "STOP";
                             }
                         }
                         else
@@ -153,35 +153,35 @@ public class RobotController : MonoBehaviour
                     }
                     socket.Send(Encoding.UTF8.GetBytes(message));
 
-                    if (_sliderChanged)
-                    {
-                        message = "Slider value changed\n";
-                        message += $"Amp:{Amp:N}\n";
-                        message += $"Freq:{Freq:N}\n";
-                        _sliderChanged = false;
-                        print(message);
-                    }
+                    //if (_sliderChanged)
+                    //{
+                    //    message = "Slider value changed\n";
+                    //    message += $"Amp:{Amp:N}\n";
+                    //    message += $"Freq:{Freq:N}\n";
+                    //    _sliderChanged = false;
+                    //    print(message);
+                    //}
 
-                    socket.Send(Encoding.UTF8.GetBytes(message));
-                    var count = socket.Receive(buffer);
+                    //socket.Send(Encoding.UTF8.GetBytes(message));
+                    //var count = socket.Receive(buffer);
                     // The server replies with 24 bytes, representing 6 floats in network 
                     // byte order (big endian).
-                    const int floatWidth = 4;
+                    //const int floatWidth = 4;
 
                     // Ensures that `buffer` holds the floats in native endianness.
-                    if (BitConverter.IsLittleEndian)
-                        for (var i = 0; i < count; i += floatWidth)
-                            Array.Reverse(buffer, i, floatWidth);
+                    //if (BitConverter.IsLittleEndian)
+                    //    for (var i = 0; i < count; i += floatWidth)
+                    //        Array.Reverse(buffer, i, floatWidth);
 
-                    lock (_lock)
-                    {
-                        Debug.Assert(count / floatWidth == _jointTorques.Length);
-                        // Update the _jointTorques array.
-                        for (var i = 0; i < _jointTorques.Length; i++)
-                            _jointTorques[i] = BitConverter.ToSingle(buffer, i * floatWidth);
-                    }
+                    //lock (_lock)
+                    //{
+                    //    Debug.Assert(count / floatWidth == _jointTorques.Length);
+                    //    // Update the _jointTorques array.
+                    //    for (var i = 0; i < _jointTorques.Length; i++)
+                    //        _jointTorques[i] = BitConverter.ToSingle(buffer, i * floatWidth);
+                    //}
 
-                    Thread.Sleep(10);
+                    Thread.Sleep(100);
                 }
             }
             catch (SocketException)
@@ -222,22 +222,22 @@ public class RobotController : MonoBehaviour
         }
     }
 
-    public void OnSliderAmpUpdated(SliderEventData eventData)
-    {
-        Amp = eventData.NewValue*40+30;
-        lock (_lock)
-        {
-            _sliderChanged = true;
-        }
-    }
-    public void OnSliderFreqUpdated(SliderEventData eventData)
-    {
-        Freq = eventData.NewValue*40+90;
-     lock (_lock)
-        {
-            _sliderChanged = true;
-        }
-    }
+    //public void OnSliderAmpUpdated(SliderEventData eventData)
+    //{
+    //    Amp = eventData.NewValue*40+30;
+    //    lock (_lock)
+    //    {
+    //        _sliderChanged = true;
+    //    }
+    //}
+    //public void OnSliderFreqUpdated(SliderEventData eventData)
+    //{
+    //    Freq = eventData.NewValue*40+90;
+    // lock (_lock)
+    //    {
+    //        _sliderChanged = true;
+    //    }
+    //}
     //private enum State
     //{
     //    ArmUp,
