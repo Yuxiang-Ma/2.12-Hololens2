@@ -9,9 +9,8 @@ public class WebStream : MonoBehaviour
 {
     public MeshRenderer frame;    //Mesh for displaying video
 
-    public static string MobileURL = "10.29.48.185:2000/video";
-
-    public static string UR5URL = "10.29.17.61:3000";
+    public static string MobileURL = "muffin.local:8080/?action=snapshot";
+    public static string UR5URL = "128.31.36.184:2000/video";
 
     private string sourceURL;
 
@@ -28,7 +27,8 @@ public class WebStream : MonoBehaviour
         sourceURL = FormatURL(_state == State.Mobile ? MobileURL : UR5URL);
         if (textMesh != null)
         {
-            textMesh.text = $"stream is starting";
+            textMesh.text = $"stream is starting\n";
+            textMesh.text += $"stream:{sourceURL}";
         }
         texture = new Texture2D(2, 2);
         Debug.Log($"test: {sourceURL}");
@@ -104,6 +104,7 @@ public class WebStream : MonoBehaviour
         WebResponse resp = req.GetResponse();
         // get response stream
         stream = resp.GetResponseStream();
+        //GetFrame();
         StartCoroutine(GetFrame());
     }
 
@@ -116,11 +117,14 @@ public class WebStream : MonoBehaviour
         while (true)
         {
             int bytesToRead = FindLength(stream);
+            //int bytesToRead = JpegData.Length;
+            
             if (textMesh != null)
             {
                 var floatingText = $"stream is read {bytesToRead}\n";
-                floatingText += $"Video URL: {sourceURL}";
+                floatingText += $"Video URL: {sourceURL}\n";
                 textMesh.text = floatingText;
+
             }
             Debug.Log("TextMesh Updated...");
             print(bytesToRead);
@@ -130,6 +134,9 @@ public class WebStream : MonoBehaviour
                 yield break;
             }
 
+            if (bytesToRead < 0)
+                bytesToRead = JpegData.Length;
+                
             int leftToRead = bytesToRead;
 
             while (leftToRead > 0)
@@ -139,8 +146,11 @@ public class WebStream : MonoBehaviour
                 yield return null;
             }
 
+            string data = System.Text.Encoding.ASCII.GetString(JpegData, 0, bytesToRead);
+
             MemoryStream ms = new MemoryStream(JpegData, 0, bytesToRead, false, true);
 
+            //floatingText +=  $"Data Read{data}";
             texture.LoadImage(ms.GetBuffer());
             frame.material.mainTexture = texture;
             stream.ReadByte(); // CR after bytes
